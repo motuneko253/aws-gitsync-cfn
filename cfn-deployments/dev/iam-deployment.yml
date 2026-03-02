@@ -1,0 +1,10 @@
+template-file-path: ./cfn-templates/iam.yml
+parameters:
+  Environment: dev
+  GroupNames: "admins-cfn,viewers-cfn"
+  UserNames: "admin-user,viewers-user"
+  AdminsGroupPolicies: "arn:aws:iam::aws:policy/AdministratorAccess"
+  ViewersGroupPolicies: "arn:aws:iam::aws:policy/ReadOnlyAccess"
+tags:
+  ManagedBy: cloudformation
+  Project: aws-cfn-gitsync

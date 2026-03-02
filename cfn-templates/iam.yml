@@ -1,0 +1,98 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: "Create IAM groups and users"
+
+Parameters:
+  Environment:
+    Type: String
+    Description: "Environment name (dev | stg | prod)"
+    AllowedValues:
+      - dev
+      - stg
+      - prod
+    Default: dev
+
+  GroupNames:
+    Type: List<String>
+    Description: "List of IAM group names to create (e.g. admins-cfn,viewers-cfn)"
+
+  AdminsGroupPolicies:
+    Type: List<String>
+    Description: "Managed policy ARNs to attach to AdminsGroup (e.g. arn:aws:iam::aws:policy/AdministratorAccess)"
+
+  ViewersGroupPolicies:
+    Type: List<String>
+    Description: "Managed policy ARNs to attach to ViewersGroup (e.g. arn:aws:iam::aws:policy/ReadOnlyAccess)"
+
+  UserNames:
+    Type: List<String>
+    Description: "List of IAM user names to create (e.g. admins,viewers)"
+
+Resources:
+  AdminsGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Join
+        - "-"
+        - - !Ref Environment
+          - !Select [0, !Ref GroupNames]
+      ManagedPolicyArns: !Ref AdminsGroupPolicies
+
+  ViewersGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: !Join
+        - "-"
+        - - !Ref Environment
+          - !Select [1, !Ref GroupNames]
+      ManagedPolicyArns: !Ref ViewersGroupPolicies
+
+  AdminsUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Join
+        - "-"
+        - - !Ref Environment
+          - !Select [0, !Ref UserNames]
+      Groups:
+        - !Ref AdminsGroup
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: cloudformation
+
+  ViewersUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Join
+        - "-"
+        - - !Ref Environment
+          - !Select [1, !Ref UserNames]
+      Groups:
+        - !Ref ViewersGroup
+      Tags:
+        - Key: Environment
+          Value: !Ref Environment
+        - Key: ManagedBy
+          Value: cloudformation
+
+Outputs:
+  AdminsGroup:
+    Description: "Administrators IAM group"
+    Value: !Ref AdminsGroup
+    Export:
+      Name: !Sub "${Environment}-AdminsGroupName"
+
+  ViewersGroup:
+    Description: "Viewers IAM group"
+    Value: !Ref ViewersGroup
+    Export:
+      Name: !Sub "${Environment}-ViewersGroupName"
+
+  AdminsUser:
+    Description: "Administrators IAM user"
+    Value: !Ref AdminsUser
+
+  ViewersUser:
+    Description: "Viewers IAM user"
+    Value: !Ref ViewersUser
